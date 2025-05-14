@@ -147,7 +147,10 @@ class CurrentConditionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('CurrentConditionsCard build: [33m[1m${weatherData.temperature}[0m');
+    debugPrint('CurrentConditionsCard build: [33m[1m${weatherData.temperature}[0m');
+    debugPrint('maxTemp: ${weatherData.maxTemp}');
+    debugPrint('maxTempRecord: ${weatherData.maxTempRecord}');
+    debugPrint('Is new record? ${weatherData.maxTemp > weatherData.maxTempRecord}');
     return RepaintBoundary(
       child: Card(
         elevation: 4,

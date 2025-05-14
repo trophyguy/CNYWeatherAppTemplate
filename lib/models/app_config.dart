@@ -36,6 +36,7 @@ class AppConfig {
   List<String> _counties;
   int _testTagUpdateInterval;
   int _clientRawUpdateInterval;
+  String? _radarStation;
 
   AppConfig._(this._prefs)
       : _testTagUrl = _prefs.getString(_testTagUrlKey) ?? _defaultTestTagUrl,
@@ -52,6 +53,7 @@ class AppConfig {
     final config = AppConfig._(prefs);
     
     _instance = config;
+    config._radarStation = prefs.getString('radar_station') ?? 'KTYX';
     return config;
   }
 
@@ -64,6 +66,7 @@ class AppConfig {
   List<String> get counties => _counties;
   int get testTagUpdateInterval => _testTagUpdateInterval;
   int get clientRawUpdateInterval => _clientRawUpdateInterval;
+  String? get radarStation => _radarStation;
 
   // Setters
   Future<void> setTestTagUrl(String url) async {
@@ -112,6 +115,11 @@ class AppConfig {
     await _prefs.setInt(_clientRawUpdateIntervalKey, minutes);
   }
 
+  Future<void> setRadarStation(String radarStation) async {
+    _radarStation = radarStation;
+    await _prefs.setString('radar_station', radarStation);
+  }
+
   // Reset to defaults
   Future<void> resetToDefaults() async {
     await setTestTagUrl(_defaultTestTagUrl);
@@ -121,5 +129,6 @@ class AppConfig {
     await setCounties([]);
     await setTestTagUpdateInterval(_defaultTestTagUpdateInterval);
     await setClientRawUpdateInterval(_defaultClientRawUpdateInterval);
+    await setRadarStation('KTYX');
   }
 } 

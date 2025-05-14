@@ -1,6 +1,38 @@
 import 'package:flutter/material.dart';
 import '../models/app_config.dart';
 
+class RadarStation {
+  final String code;
+  final String name;
+  final String location;
+
+  const RadarStation({
+    required this.code,
+    required this.name,
+    required this.location,
+  });
+}
+
+class RadarStations {
+  static const List<RadarStation> stations = [
+    RadarStation(code: "KTYX", name: "Montague", location: "Fort Drum, NY"),
+    RadarStation(code: "KBGM", name: "Binghamton", location: "Binghamton, NY"),
+    RadarStation(code: "KBUF", name: "Buffalo", location: "Buffalo, NY"),
+    RadarStation(code: "KOKX", name: "Upton", location: "Upton, NY (NYC area)"),
+    RadarStation(code: "KENX", name: "Albany", location: "Albany, NY"),
+    RadarStation(code: "KCXX", name: "Burlington", location: "Burlington, VT"),
+    RadarStation(code: "KBOX", name: "Boston", location: "Boston, MA"),
+    RadarStation(code: "KGYX", name: "Gray", location: "Portland, ME"),
+  ];
+
+  static RadarStation? findByCode(String code) {
+    return stations.cast<RadarStation?>().firstWhere(
+      (station) => station?.code == code,
+      orElse: () => null,
+    );
+  }
+}
+
 class ConfigScreen extends StatefulWidget {
   const ConfigScreen({super.key});
 
@@ -25,6 +57,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
   List<String> _selectedCounties = [];
   static const int _maxCounties = 6;
   String? _countyLimitError;
+  String _selectedRadarCode = "KTYX"; // Default radar
+  final _radarStationController = TextEditingController();
 
   @override
   void initState() {
@@ -43,6 +77,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
         _testTagUpdateIntervalController.text = config.testTagUpdateInterval.toString();
         _clientRawUpdateIntervalController.text = config.clientRawUpdateInterval.toString();
         _selectedCounties = List.from(config.counties);
+        _selectedRadarCode = config.radarStation ?? "KTYX";
+        _radarStationController.text = config.radarStation ?? "KTYX";
       });
     });
   }
@@ -57,6 +93,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
     _testTagUpdateIntervalController.dispose();
     _clientRawUpdateIntervalController.dispose();
     _newCountyController.dispose();
+    _radarStationController.dispose();
     super.dispose();
   }
 
@@ -72,6 +109,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
       await _config.setTestTagUpdateInterval(int.parse(_testTagUpdateIntervalController.text));
       await _config.setClientRawUpdateInterval(int.parse(_clientRawUpdateIntervalController.text));
       await _config.setCounties(_selectedCounties);
+      await _config.setRadarStation(_radarStationController.text.toUpperCase());
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,6 +137,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
         _testTagUpdateIntervalController.text = _config.testTagUpdateInterval.toString();
         _clientRawUpdateIntervalController.text = _config.clientRawUpdateInterval.toString();
         _selectedCounties = List.from(_config.counties);
+        _selectedRadarCode = _config.radarStation ?? "KTYX";
+        _radarStationController.text = _config.radarStation ?? "KTYX";
       });
       
       if (mounted) {
@@ -174,7 +214,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   child: TextField(
                     controller: _latitudeController,
                     decoration: const InputDecoration(
-                      labelText: 'Latitude',
+                      labelText: 'Your Latitude',
                       hintText: 'Enter latitude',
                       border: OutlineInputBorder(),
                     ),
@@ -186,7 +226,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   child: TextField(
                     controller: _longitudeController,
                     decoration: const InputDecoration(
-                      labelText: 'Longitude',
+                      labelText: 'Your Longitude',
                       hintText: 'Enter longitude',
                       border: OutlineInputBorder(),
                     ),
@@ -234,8 +274,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   child: TextField(
                     controller: _newCountyController,
                     decoration: const InputDecoration(
-                      labelText: 'Add County/Zone Code',
-                      hintText: 'e.g. NYC065',
+                      labelText: 'Add Zone',
+                      hintText: 'Ex: NYZ037',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -285,6 +325,32 @@ class _ConfigScreenState extends State<ConfigScreen> {
               ],
             ),
             const SizedBox(height: 24),
+            TextField(
+              controller: _radarStationController,
+              decoration: const InputDecoration(
+                labelText: 'Weather Radar Station Code',
+                hintText: 'Enter 4-letter code (e.g., KTYX)',
+                border: OutlineInputBorder(),
+                helperText: 'Enter your local NWS radar station code',
+              ),
+              maxLength: 4,
+              textCapitalization: TextCapitalization.characters,
+              onChanged: (value) {
+                // Auto-uppercase as user types
+                if (value.length <= 4) {
+                  final upperValue = value.toUpperCase();
+                  if (upperValue != value) {
+                    _radarStationController.value = _radarStationController.value.copyWith(
+                      text: upperValue,
+                      selection: TextSelection.fromPosition(
+                        TextPosition(offset: upperValue.length),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _saveConfig,
               style: ElevatedButton.styleFrom(
