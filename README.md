@@ -59,3 +59,5 @@ Current version: 1.1.0
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+ TEST CHANGE
